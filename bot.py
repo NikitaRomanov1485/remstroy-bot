@@ -190,6 +190,23 @@ async def reset_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_main_menu(update, context)
 
 def main():
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    
+    class HealthCheckHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'OK')
+    
+    def run_health_server():
+        port = 8080
+        server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+        server.serve_forever()
+    
+    threading.Thread(target=run_health_server, daemon=True).start()
+    
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CallbackQueryHandler(show_main_menu, pattern='^menu_main$'))
@@ -198,25 +215,8 @@ def main():
     application.add_handler(CallbackQueryHandler(show_total, pattern='^show_total$'))
     application.add_handler(CallbackQueryHandler(reset_cart, pattern='^reset_cart$'))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_quantity))
+    
     print("Бот запущен...")
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
-
-# --- Мини-сервер для Render (чтобы не засыпал) ---
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b'OK')
-
-def run_health_server():
-    port = 8080
-    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
-    server.serve_forever()
-
-# Запускаем мини-сервер в отдельном потоке
-threading.Thread(target=run_health_server, daemon=True).start()
     application.run_polling()
 
 if __name__ == '__main__':
