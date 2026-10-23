@@ -10,50 +10,50 @@ BOT_TOKEN = '8707599180:AAFjeddyCdiE8T1uA4CQe9QrWw3Vm7pGrEk'
 
 # ================= ПРАЙС-ЛИСТ =================
 PRICE_LIST = {
-    'tochki': {
+    '1': {
         'name': '🔌 Монтаж точек',
         'items': {
-            '1': {'name': 'Розетка (бетон)', 'price': 27, 'unit': 'шт.'},
-            '2': {'name': 'Розетка (кирпич)', 'price': 22, 'unit': 'шт.'},
-            '3': {'name': 'Выключатель', 'price': 10, 'unit': 'шт.'},
-            '4': {'name': 'Розетка для плиты', 'price': 15, 'unit': 'шт.'},
+            '101': {'name': 'Розетка (бетон)', 'price': 27, 'unit': 'шт.'},
+            '102': {'name': 'Розетка (кирпич)', 'price': 22, 'unit': 'шт.'},
+            '103': {'name': 'Выключатель', 'price': 10, 'unit': 'шт.'},
+            '104': {'name': 'Розетка для плиты', 'price': 15, 'unit': 'шт.'},
         }
     },
-    'kabel': {
+    '2': {
         'name': '🧵 Кабель и штробление',
         'items': {
-            '5': {'name': 'Прокладка кабеля', 'price': 2, 'unit': 'м.п.'},
-            '6': {'name': 'Кабель-канал', 'price': 9, 'unit': 'м.п.'},
-            '7': {'name': 'Штробление (бетон)', 'price': 10, 'unit': 'м.п.'},
-            '8': {'name': 'Штробление (кирпич)', 'price': 6, 'unit': 'м.п.'},
-            '9': {'name': 'Демонтаж проводки', 'price': 3, 'unit': 'м.п.'},
+            '201': {'name': 'Прокладка кабеля', 'price': 2, 'unit': 'м.п.'},
+            '202': {'name': 'Кабель-канал', 'price': 9, 'unit': 'м.п.'},
+            '203': {'name': 'Штробление (бетон)', 'price': 10, 'unit': 'м.п.'},
+            '204': {'name': 'Штробление (кирпич)', 'price': 6, 'unit': 'м.п.'},
+            '205': {'name': 'Демонтаж проводки', 'price': 3, 'unit': 'м.п.'},
         }
     },
-    'shchity': {
+    '3': {
         'name': '⚙️ Электрощиты',
         'items': {
-            '10': {'name': 'Автомат', 'price': 8, 'unit': 'шт.'},
-            '11': {'name': 'Дифавтомат', 'price': 12, 'unit': 'шт.'},
-            '12': {'name': 'Реле напряжения', 'price': 18, 'unit': 'шт.'},
-            '13': {'name': 'Сборка щита', 'price': 150, 'unit': 'шт.'},
+            '301': {'name': 'Автомат', 'price': 8, 'unit': 'шт.'},
+            '302': {'name': 'Дифавтомат', 'price': 12, 'unit': 'шт.'},
+            '303': {'name': 'Реле напряжения', 'price': 18, 'unit': 'шт.'},
+            '304': {'name': 'Сборка щита', 'price': 150, 'unit': 'шт.'},
         }
     },
-    'teply_pol': {
+    '4': {
         'name': '♨️ Тёплый пол',
         'items': {
-            '14': {'name': 'ИК плёнка', 'price': 12, 'unit': 'м²'},
-            '15': {'name': 'Кабель в стяжку', 'price': 18, 'unit': 'м²'},
-            '16': {'name': 'Маты', 'price': 25, 'unit': 'м²'},  # было "Нагревательные маты"
-            '17': {'name': 'Терморегулятор', 'price': 20, 'unit': 'шт.'},
+            '401': {'name': 'ИК плёнка', 'price': 12, 'unit': 'м²'},
+            '402': {'name': 'Кабель в стяжку', 'price': 18, 'unit': 'м²'},
+            '403': {'name': 'Маты', 'price': 25, 'unit': 'м²'},
+            '404': {'name': 'Терморегулятор', 'price': 20, 'unit': 'шт.'},
         }
     },
-    'osveshchenie': {
+    '5': {
         'name': '💡 Освещение',
         'items': {
-            '18': {'name': 'Люстра', 'price': 15, 'unit': 'шт.'},
-            '19': {'name': 'Точечный светильник', 'price': 10, 'unit': 'шт.'},
-            '20': {'name': 'Линейный светильник', 'price': 30, 'unit': 'шт.'},
-            '21': {'name': 'Светодиодная панель', 'price': 20, 'unit': 'шт.'},
+            '501': {'name': 'Люстра', 'price': 15, 'unit': 'шт.'},
+            '502': {'name': 'Точечный светильник', 'price': 10, 'unit': 'шт.'},
+            '503': {'name': 'Линейный светильник', 'price': 30, 'unit': 'шт.'},
+            '504': {'name': 'Светодиодная панель', 'price': 20, 'unit': 'шт.'},
         }
     }
 }
@@ -75,12 +75,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    
     keyboard = []
     for cat_id, cat_data in PRICE_LIST.items():
+        # callback_data будет просто "cat_1", "cat_2" и т.д.
         keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
+        
     user_id = query.from_user.id
     if user_carts.get(user_id):
         keyboard.append([InlineKeyboardButton('🧾 Показать итог', callback_data='show_total')])
+        
     reply_markup = InlineKeyboardMarkup(keyboard)
     try:
         await query.edit_message_text("Выберите категорию работ:", reply_markup=reply_markup)
@@ -91,25 +95,21 @@ async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
-    # Извлекаем ID категории из данных кнопки (убираем "cat_")
-    cat_id = query.data.replace('cat_', '')
+    cat_id = query.data.replace('cat_', '') # Получим "4"
     category = PRICE_LIST.get(cat_id)
     
     if not category:
-        await query.answer("Категория не найдена", show_alert=True)
         return
         
     keyboard = []
     for item_id, item_data in category['items'].items():
-        # Короткий текст для кнопки, чтобы точно влез на экран
         btn_text = f"{item_data['name']} — {item_data['price']} BYN"
-        # Формируем callback_data: item_ + ID категории + _ + ID позиции
+        # callback_data будет "item_4_401"
         callback = f'item_{cat_id}_{item_id}'
         keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
         
     keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
     await query.edit_message_text(
         f"Категория: {category['name']}\nВыберите позицию:",
         reply_markup=reply_markup
@@ -120,23 +120,15 @@ async def select_item(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     try:
-        # Данные кнопки выглядят как: item_teply_pol_14
-        parts = query.data.split('_')
-        # parts[0] = "item", parts[1] = "teply_pol", parts[2] = "14"
+        parts = query.data.split('_') # ["item", "4", "401"]
         cat_id = parts[1]
         item_id = parts[2]
-        
-        # Ищем товар в нашем словаре
         item = PRICE_LIST[cat_id]['items'][item_id]
-        
     except (IndexError, KeyError):
-        # Если что-то не совпало — говорим об ошибке
         await query.answer("Ошибка выбора. Попробуйте снова.", show_alert=True)
         return
 
-    # Сохраняем выбор, чтобы понять, сколько штук введет пользователь
     context.user_data['waiting_qty'] = {'cat_id': cat_id, 'item_id': item_id}
-    
     await query.edit_message_text(
         f"Вы выбрали: {item['name']} (от {item['price']} BYN / {item['unit']})\n\n"
         f"Введите количество (только число):"
