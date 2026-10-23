@@ -11,10 +11,10 @@ BOT_TOKEN = '8707599180:AAFjeddyCdiE8T1uA4CQe9QrWw3Vm7pGrEk'
 # ================= ПРАЙС-ЛИСТ =================
 PRICE_LIST = {
     'tochki': {
-        'name': '🔌 Монтаж точек и приборов',
+        'name': '🔌 Монтаж точек',
         'items': {
             'rozetka_beton': {'name': 'Розетка (бетон)', 'price': 27, 'unit': 'шт.'},
-            'rozetka_kirpich': {'name': 'Розетка (кирпич/газосиликат)', 'price': 22, 'unit': 'шт.'},
+            'rozetka_kirpich': {'name': 'Розетка (кирпич)', 'price': 22, 'unit': 'шт.'},
             'vyklyuchatel': {'name': 'Выключатель', 'price': 10, 'unit': 'шт.'},
             'plita': {'name': 'Розетка для плиты', 'price': 15, 'unit': 'шт.'},
         }
@@ -23,25 +23,25 @@ PRICE_LIST = {
         'name': '🧵 Кабель и штробление',
         'items': {
             'kabel_prokladka': {'name': 'Прокладка кабеля', 'price': 2, 'unit': 'м.п.'},
-            'kabel_kanal': {'name': 'Монтаж кабель-канала + кабель', 'price': 9, 'unit': 'м.п.'},
+            'kabel_kanal': {'name': 'Кабель-канал', 'price': 9, 'unit': 'м.п.'},
             'shtroba_beton': {'name': 'Штробление (бетон)', 'price': 10, 'unit': 'м.п.'},
             'shtroba_kirpich': {'name': 'Штробление (кирпич)', 'price': 6, 'unit': 'м.п.'},
-            'demontazh': {'name': 'Демонтаж старой проводки', 'price': 3, 'unit': 'м.п.'},
+            'demontazh': {'name': 'Демонтаж проводки', 'price': 3, 'unit': 'м.п.'},
         }
     },
     'shchity': {
         'name': '⚙️ Электрощиты',
         'items': {
-            'avtomat': {'name': 'Установка автомата', 'price': 8, 'unit': 'шт.'},
-            'uzo': {'name': 'Дифавтомат / УЗО', 'price': 12, 'unit': 'шт.'},
+            'avtomat': {'name': 'Автомат', 'price': 8, 'unit': 'шт.'},
+            'uzo': {'name': 'Дифавтомат', 'price': 12, 'unit': 'шт.'},
             'rele': {'name': 'Реле напряжения', 'price': 18, 'unit': 'шт.'},
-            'sborka_shchita': {'name': 'Сборка щита', 'price': 150, 'unit': 'шт.'},
+            'sborka': {'name': 'Сборка щита', 'price': 150, 'unit': 'шт.'},
         }
     },
     'teply_pol': {
         'name': '♨️ Тёплый пол',
         'items': {
-            'plenka': {'name': 'Инфракрасная плёнка', 'price': 12, 'unit': 'м²'},
+            'plenka': {'name': 'ИК плёнка', 'price': 12, 'unit': 'м²'},
             'kabel_styazhka': {'name': 'Кабель в стяжку', 'price': 18, 'unit': 'м²'},
             'maty': {'name': 'Нагревательные маты', 'price': 25, 'unit': 'м²'},
             'termostat': {'name': 'Терморегулятор', 'price': 20, 'unit': 'шт.'},
@@ -68,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
         "👋 Привет! Я бот-калькулятор RemStroy.\n\n"
-        "Выберите категорию, затем позицию и укажите количество. Я посчитаю итоговую стоимость.",
+        "Выберите категорию, затем позицию и укажите количество.",
         reply_markup=reply_markup
     )
 
@@ -96,28 +96,34 @@ async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     keyboard = []
     for item_id, item_data in category['items'].items():
-        btn_text = f"{item_data['name']} — от {item_data['price']} {item_data['unit']}"
-        keyboard.append([InlineKeyboardButton(btn_text, callback_data=f'item_{cat_id}_{item_id}')])
-    keyboard.append([InlineKeyboardButton('⬅️ Назад в меню', callback_data='menu_main')])
+        # Короткая кнопка для Telegram (без длинных тире)
+        btn_text = f"{item_data['name']} — {item_data['price']} BYN"
+        # Короткий callback_data
+        callback = f'item_{cat_id}_{item_id}'
+        keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
+    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.edit_message_text(
-        f"Категория: *{category['name']}*\nВыберите позицию:",
-        reply_markup=reply_markup,
-        parse_mode='Markdown'
+        f"Категория: {category['name']}\nВыберите позицию:",
+        reply_markup=reply_markup
     )
 
 async def select_item(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    parts = query.data.split('_')
-    cat_id = parts[1]
-    item_id = parts[2]
-    item = PRICE_LIST[cat_id]['items'][item_id]
+    try:
+        parts = query.data.split('_')
+        cat_id = parts[1]
+        item_id = parts[2]
+        item = PRICE_LIST[cat_id]['items'][item_id]
+    except (IndexError, KeyError):
+        await query.answer("Ошибка выбора. Попробуйте снова.", show_alert=True)
+        return
+
     context.user_data['waiting_qty'] = {'cat_id': cat_id, 'item_id': item_id}
     await query.edit_message_text(
-        f"Вы выбрали: *{item['name']}* (от {item['price']} BYN / {item['unit']})\n\n"
-        f"Введите количество (только число):",
-        parse_mode='Markdown'
+        f"Вы выбрали: {item['name']} (от {item['price']} BYN / {item['unit']})\n\n"
+        f"Введите количество (только число):"
     )
 
 async def handle_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -150,10 +156,9 @@ async def handle_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        f"✅ Добавлено: {item['name']} — {qty} {item['unit']} × {item['price']} BYN = *{total_item_price} BYN*\n\n"
+        f"✅ Добавлено: {item['name']} — {qty} {item['unit']} × {item['price']} BYN = {total_item_price} BYN\n\n"
         f"Что делаем дальше?",
-        reply_markup=reply_markup,
-        parse_mode='Markdown'
+        reply_markup=reply_markup
     )
 
 async def show_total(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -164,19 +169,18 @@ async def show_total(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not cart:
         await query.edit_message_text("Ваша корзина пуста.")
         return
-    text = "🧾 *Ваш расчет:*\n\n"
+    text = "🧾 Ваш расчет:\n\n"
     total_sum = 0
     for item in cart:
         text += f"• {item['name']}: {item['qty']} {item['unit']} × {item['price']} = {item['total']} BYN\n"
         total_sum += item['total']
-    text += f"\n💰 *ИТОГО: {total_sum} BYN* (без учета материалов)\n\n"
-    text += "Чтобы начать новый расчет, нажмите 'Сбросить'."
+    text += f"\n💰 ИТОГО: {total_sum} BYN (без учета материалов)\n\n"
     keyboard = [
-        [InlineKeyboardButton('🔄 Сбросить и начать заново', callback_data='reset_cart')],
+        [InlineKeyboardButton('🔄 Сбросить', callback_data='reset_cart')],
         [InlineKeyboardButton('⬅️ В меню', callback_data='menu_main')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text(text, reply_markup=reply_markup, parse_mode='Markdown')
+    await query.edit_message_text(text, reply_markup=reply_markup)
 
 async def reset_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
