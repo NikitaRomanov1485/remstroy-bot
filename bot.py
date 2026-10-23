@@ -90,19 +90,26 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    
+    # Извлекаем ID категории из данных кнопки (убираем "cat_")
     cat_id = query.data.replace('cat_', '')
     category = PRICE_LIST.get(cat_id)
+    
     if not category:
+        await query.answer("Категория не найдена", show_alert=True)
         return
+        
     keyboard = []
     for item_id, item_data in category['items'].items():
-        # Короткая кнопка для Telegram (без длинных тире)
+        # Короткий текст для кнопки, чтобы точно влез на экран
         btn_text = f"{item_data['name']} — {item_data['price']} BYN"
-        # Короткий callback_data
+        # Формируем callback_data: item_ + ID категории + _ + ID позиции
         callback = f'item_{cat_id}_{item_id}'
         keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
+        
     keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
     await query.edit_message_text(
         f"Категория: {category['name']}\nВыберите позицию:",
         reply_markup=reply_markup
@@ -111,16 +118,25 @@ async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def select_item(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    
     try:
+        # Данные кнопки выглядят как: item_teply_pol_14
         parts = query.data.split('_')
+        # parts[0] = "item", parts[1] = "teply_pol", parts[2] = "14"
         cat_id = parts[1]
         item_id = parts[2]
+        
+        # Ищем товар в нашем словаре
         item = PRICE_LIST[cat_id]['items'][item_id]
+        
     except (IndexError, KeyError):
+        # Если что-то не совпало — говорим об ошибке
         await query.answer("Ошибка выбора. Попробуйте снова.", show_alert=True)
         return
 
+    # Сохраняем выбор, чтобы понять, сколько штук введет пользователь
     context.user_data['waiting_qty'] = {'cat_id': cat_id, 'item_id': item_id}
+    
     await query.edit_message_text(
         f"Вы выбрали: {item['name']} (от {item['price']} BYN / {item['unit']})\n\n"
         f"Введите количество (только число):"
