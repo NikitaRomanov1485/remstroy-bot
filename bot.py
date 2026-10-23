@@ -1,4 +1,6 @@
 import logging
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import (
     ApplicationBuilder, ContextTypes, CommandHandler, 
@@ -75,16 +77,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
     keyboard = []
     for cat_id, cat_data in PRICE_LIST.items():
-        # callback_data будет просто "cat_1", "cat_2" и т.д.
         keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
-        
     user_id = query.from_user.id
     if user_carts.get(user_id):
         keyboard.append([InlineKeyboardButton('🧾 Показать итог', callback_data='show_total')])
-        
     reply_markup = InlineKeyboardMarkup(keyboard)
     try:
         await query.edit_message_text("Выберите категорию работ:", reply_markup=reply_markup)
@@ -94,20 +92,16 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
-    cat_id = query.data.replace('cat_', '') # Получим "4"
+    cat_id = query.data.replace('cat_', '')
     category = PRICE_LIST.get(cat_id)
-    
     if not category:
+        await query.answer("Категория не найдена", show_alert=True)
         return
-        
     keyboard = []
     for item_id, item_data in category['items'].items():
         btn_text = f"{item_data['name']} — {item_data['price']} BYN"
-        # callback_data будет "item_4_401"
         callback = f'item_{cat_id}_{item_id}'
         keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
-        
     keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.edit_message_text(
@@ -118,16 +112,14 @@ async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def select_item(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
     try:
-        parts = query.data.split('_') # ["item", "4", "401"]
+        parts = query.data.split('_')
         cat_id = parts[1]
         item_id = parts[2]
         item = PRICE_LIST[cat_id]['items'][item_id]
     except (IndexError, KeyError):
         await query.answer("Ошибка выбора. Попробуйте снова.", show_alert=True)
         return
-
     context.user_data['waiting_qty'] = {'cat_id': cat_id, 'item_id': item_id}
     await query.edit_message_text(
         f"Вы выбрали: {item['name']} (от {item['price']} BYN / {item['unit']})\n\n"
@@ -198,21 +190,18 @@ async def reset_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await show_main_menu(update, context)
 
 def main():
-    import threading
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-    
     class HealthCheckHandler(BaseHTTPRequestHandler):
         def do_GET(self):
             self.send_response(200)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(b'OK')
-    
+            
     def run_health_server():
         port = 8080
         server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
         server.serve_forever()
-    
+        
     threading.Thread(target=run_health_server, daemon=True).start()
     
     application = ApplicationBuilder().token(BOT_TOKEN).build()
