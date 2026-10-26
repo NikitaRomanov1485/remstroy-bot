@@ -95,18 +95,12 @@ user_carts = {}
 
 # ================= ФУНКЦИЯ ГЕНЕРАЦИИ PDF =================
 def generate_pdf(cart, total_sum, name, phone):
-    # Скачиваем шрифт, если его нет
-    font_filename = "DejaVuSansCondensed.ttf"
-    if not os.path.exists(font_filename):
-        url = "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSansCondensed.ttf"
-        r = requests.get(url)
-        with open(font_filename, 'wb') as f:
-            f.write(r.content)
-
+    font_filename = "DejaVuSans.ttf"
+    
     pdf = FPDF()
     pdf.add_page()
     
-    # Подключаем скачанный шрифт
+    # Просто подключаем шрифт, который лежит рядом с ботом
     pdf.add_font('DejaVu', '', font_filename, uni=True)
     pdf.set_font('DejaVu', size=12)
     
