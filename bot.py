@@ -15,45 +15,57 @@ PRICE_LIST = {
     '1': {
         'name': '🔌 Монтаж точек и приборов',
         'items': {
-            '101': {'name': 'Розетка под ключ (бетон)', 'price': 27, 'unit': 'шт.'},
-            '102': {'name': 'Розетка под ключ (кирпич)', 'price': 22, 'unit': 'шт.'},
-            '103': {'name': 'Выключатель под ключ (бетон)', 'price': 27, 'unit': 'шт.'},
-            '104': {'name': 'Выключатель под ключ (кирпич)', 'price': 22, 'unit': 'шт.'},
-            '105': {'name': 'Установка розетки', 'price': 10, 'unit': 'шт.'},
-            '106': {'name': 'Установка выключателя', 'price': 10, 'unit': 'шт.'},
-            '107': {'name': 'Высверливание подрозетника (бетон)', 'price': 15, 'unit': 'шт.'},
-            '108': {'name': 'Высверливание подрозетника (кирпич)', 'price': 10, 'unit': 'шт.'},
-            '109': {'name': 'Высверливание подрозетника (ПГС)', 'price': 8, 'unit': 'шт.'},
-            '110': {'name': 'Монтаж подрозетника', 'price': 2, 'unit': 'шт.'},
-            '111': {'name': 'Распределительная коробка', 'price': 20, 'unit': 'шт.'},
+            '110': {'name': 'Розетка под ключ (бетон)', 'price': 27, 'unit': 'шт.'},
+            '111': {'name': 'Розетка под ключ (кирпич)', 'price': 22, 'unit': 'шт.'},
+            '112': {'name': 'Выключатель под ключ (бетон)', 'price': 27, 'unit': 'шт.'},
+            '113': {'name': 'Выключатель под ключ (кирпич)', 'price': 22, 'unit': 'шт.'},
+            '101': {'name': 'Розетка / выключатель', 'price': 10, 'unit': 'шт.'},
+            '102': {'name': 'Розетка для плиты', 'price': 15, 'unit': 'шт.'},
+            '103': {'name': 'Люстра или бра', 'price': 15, 'unit': 'шт.'},
+            '104': {'name': 'Точечный светильник', 'price': 10, 'unit': 'шт.'},
+            '105': {'name': 'Монтаж подрозетника', 'price': 2, 'unit': 'шт.'},
+            '106': {'name': 'Высверливание (ПГС)', 'price': 8, 'unit': 'шт.'},
+            '107': {'name': 'Высверливание (бетон)', 'price': 15, 'unit': 'шт.'},
+            '108': {'name': 'Высверливание (кирпич)', 'price': 10, 'unit': 'шт.'},
+            '109': {'name': 'Распред. коробка', 'price': 20, 'unit': 'шт.'},
         }
     },
     '2': {
         'name': '🧵 Кабель и штробление',
         'items': {
-            '201': {'name': 'Прокладка кабеля', 'price': 2, 'unit': 'м.п.'},
-            '202': {'name': 'Кабель-канал', 'price': 9, 'unit': 'м.п.'},
-            '203': {'name': 'Штробление (бетон)', 'price': 10, 'unit': 'м.п.'},
-            '204': {'name': 'Штробление (кирпич)', 'price': 6, 'unit': 'м.п.'},
-            '205': {'name': 'Демонтаж проводки', 'price': 3, 'unit': 'м.п.'},
+            '201': {'name': 'Прокладка кабеля с крепежом', 'price': 2, 'unit': 'м.п.'},
+            '202': {'name': 'Разводка в гофре', 'price': 2, 'unit': 'м.п.'},
+            '203': {'name': 'Штробление в газосиликате', 'price': 6, 'unit': 'м.п.'},
+            '204': {'name': 'Штробление в бетоне', 'price': 10, 'unit': 'м.п.'},
+            '205': {'name': 'Штробление в кирпиче', 'price': 10, 'unit': 'м.п.'},
+            '206': {'name': 'Монтаж гофры на клипсы', 'price': 3, 'unit': 'м.п.'},
+            '207': {'name': 'Монтаж кабель-канала + кабель', 'price': 9, 'unit': 'м.п.'},
+            '208': {'name': 'Протяжка кабеля в нише', 'price': 5, 'unit': 'м.п.'},
+            '209': {'name': 'Замазывание штроб', 'price': 5, 'unit': 'м.п.'},
         }
     },
     '3': {
         'name': '⚙️ Электрощиты',
         'items': {
-            '301': {'name': 'Автомат', 'price': 8, 'unit': 'шт.'},
-            '302': {'name': 'Дифавтомат', 'price': 12, 'unit': 'шт.'},
-            '303': {'name': 'Реле напряжения', 'price': 18, 'unit': 'шт.'},
-            '304': {'name': 'Сборка щита', 'price': 150, 'unit': 'шт.'},
+            '301': {'name': 'Ниша в газосиликате', 'price': 40, 'unit': 'шт.'},
+            '302': {'name': 'Ниша в бетоне / кирпиче', 'price': 70, 'unit': 'шт.'},
+            '303': {'name': 'Монтаж корпуса в нишу', 'price': 15, 'unit': 'шт.'},
+            '304': {'name': 'Установка автомата', 'price': 8, 'unit': 'шт.'},
+            '305': {'name': 'Реле напряжения', 'price': 18, 'unit': 'шт.'},
+            '306': {'name': 'Дифавтомат / УЗО', 'price': 12, 'unit': 'шт.'},
         }
     },
     '4': {
         'name': '♨️ Тёплый пол',
         'items': {
-            '401': {'name': 'ИК плёнка', 'price': 12, 'unit': 'м²'},
+            '401': {'name': 'Инфракрасная плёнка', 'price': 12, 'unit': 'м²'},
             '402': {'name': 'Кабель в стяжку', 'price': 18, 'unit': 'м²'},
-            '403': {'name': 'Маты', 'price': 25, 'unit': 'м²'},
+            '403': {'name': 'Нагревательные маты', 'price': 25, 'unit': 'м²'},
             '404': {'name': 'Терморегулятор', 'price': 20, 'unit': 'шт.'},
+            '405': {'name': 'Укладка подложки', 'price': 5, 'unit': 'м²'},
+            '406': {'name': 'Датчик температуры', 'price': 12, 'unit': 'шт.'},
+            '407': {'name': 'Клеммы и изоляция', 'price': 1, 'unit': 'шт.'},
+            '408': {'name': 'Гидроизоляция', 'price': 3, 'unit': 'м²'},
         }
     },
     '5': {
@@ -84,15 +96,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    keyboard = []
-    for cat_id, cat_data in PRICE_LIST.items():
-        keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
+    
+    keyboard = [
+        [InlineKeyboardButton('⚡ Электрика', callback_data='menu_electric')],
+        [InlineKeyboardButton('🚰 Сантехника (скоро)', callback_data='menu_plumbing')]
+    ]
+    
     user_id = query.from_user.id
     if user_carts.get(user_id):
         keyboard.append([InlineKeyboardButton('🧾 Показать итог', callback_data='show_total')])
+        
     reply_markup = InlineKeyboardMarkup(keyboard)
     try:
-        await query.edit_message_text("Выберите категорию работ:", reply_markup=reply_markup)
+        await query.edit_message_text("Выберите раздел:", reply_markup=reply_markup)
     except:
         pass
 
@@ -196,6 +212,31 @@ async def reset_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer("Корзина сброшена!")
     await show_main_menu(update, context)
 
+async def show_electric_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    keyboard = []
+    for cat_id, cat_data in PRICE_LIST.items():
+        keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
+        
+    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text("⚡ Электрика: выберите категорию работ:", reply_markup=reply_markup)
+
+async def show_plumbing_stub(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    keyboard = [[InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        "🚰 Раздел «Сантехника» пока в разработке.\nСкоро здесь появятся услуги по монтажу труб, установке смесителей и т.д.",
+        reply_markup=reply_markup
+    )
+
 def main():
     class HealthCheckHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -213,6 +254,8 @@ def main():
     
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
+    application.add_handler(CallbackQueryHandler(show_electric_menu, pattern='^menu_electric$'))
+    application.add_handler(CallbackQueryHandler(show_plumbing_stub, pattern='^menu_plumbing$'))
     application.add_handler(CallbackQueryHandler(show_main_menu, pattern='^menu_main$'))
     application.add_handler(CallbackQueryHandler(show_category, pattern='^cat_'))
     application.add_handler(CallbackQueryHandler(select_item, pattern='^item_'))
