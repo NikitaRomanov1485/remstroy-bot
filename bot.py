@@ -96,16 +96,19 @@ user_carts = {}
 def generate_pdf(cart, total_sum, name, phone):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Helvetica", size=14)
+    
+    # ВАЖНО: Подключаем шрифт с поддержкой кириллицы
+    # fpdf2 может скачать его автоматически, если он есть в системе
+    pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
+    pdf.set_font('DejaVu', size=12)
     
     # Заголовок
     pdf.cell(200, 10, txt="Смета на электромонтажные работы", ln=True, align='C')
-    pdf.set_font("Helvetica", size=10)
+    pdf.set_font('DejaVu', size=10)
     pdf.cell(200, 10, txt=f"Клиент: {name} | Тел: {phone}", ln=True, align='C')
     pdf.ln(10)
     
     # Таблица
-    pdf.set_font("Helvetica", size=10)
     pdf.cell(100, 10, "Наименование", border=1)
     pdf.cell(30, 10, "Кол-во", border=1, align='C')
     pdf.cell(30, 10, "Цена", border=1, align='C')
@@ -118,7 +121,7 @@ def generate_pdf(cart, total_sum, name, phone):
         pdf.cell(30, 10, f"{item['total']} BYN", border=1, align='C', ln=True)
         
     pdf.ln(5)
-    pdf.set_font("Helvetica", size=12, style='B')
+    pdf.set_font('DejaVu', size=12, style='B')
     pdf.cell(200, 10, txt=f"ИТОГО (без материалов): {total_sum} BYN", ln=True, align='R')
     
     filename = f"Смета_{name.replace(' ', '_')}.pdf"
