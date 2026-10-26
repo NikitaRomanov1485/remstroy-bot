@@ -1,6 +1,7 @@
 import logging
 import threading
 import os
+import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from fpdf import FPDF
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
@@ -94,12 +95,19 @@ user_carts = {}
 
 # ================= ФУНКЦИЯ ГЕНЕРАЦИИ PDF =================
 def generate_pdf(cart, total_sum, name, phone):
+    # Скачиваем шрифт, если его нет
+    font_filename = "DejaVuSansCondensed.ttf"
+    if not os.path.exists(font_filename):
+        url = "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSansCondensed.ttf"
+        r = requests.get(url)
+        with open(font_filename, 'wb') as f:
+            f.write(r.content)
+
     pdf = FPDF()
     pdf.add_page()
     
-    # ВАЖНО: Подключаем шрифт с поддержкой кириллицы
-    # fpdf2 может скачать его автоматически, если он есть в системе
-    pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
+    # Подключаем скачанный шрифт
+    pdf.add_font('DejaVu', '', font_filename, uni=True)
     pdf.set_font('DejaVu', size=12)
     
     # Заголовок
