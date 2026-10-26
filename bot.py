@@ -123,7 +123,7 @@ def generate_pdf(cart, total_sum, name, phone):
         pdf.cell(30, 10, f"{item['total']} BYN", border=1, align='C', ln=True)
         
     pdf.ln(5)
-    pdf.set_font('DejaVu', size=12, style='B')
+    pdf.set_font('DejaVu', size=12)
     pdf.cell(200, 10, txt=f"ИТОГО (без материалов): {total_sum} BYN", ln=True, align='R')
     
     filename = f"Смета_{name.replace(' ', '_')}.pdf"
