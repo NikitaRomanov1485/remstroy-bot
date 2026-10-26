@@ -1,14 +1,21 @@
 import logging
 import threading
+import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from fpdf import FPDF
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import (
     ApplicationBuilder, ContextTypes, CommandHandler, 
-    MessageHandler, filters, CallbackQueryHandler
+    MessageHandler, filters, CallbackQueryHandler, ConversationHandler
 )
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = '8707599180:AAFjeddyCdiE8T1uA4CQe9QrWw3Vm7pGrEk'
+# ID чата, КУДА ПРИХОДИТЬ ЗАЯВКАМ (ваш ID)
+ADMIN_CHAT_ID = '7310945290' 
+
+# Состояния для диалога
+ASK_NAME, ASK_PHONE = range(2)
 
 # ================= ПРАЙС-ЛИСТ =================
 PRICE_LIST = {
@@ -85,11 +92,48 @@ PRICE_LIST = {
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 user_carts = {}
 
+# ================= ФУНКЦИЯ ГЕНЕРАЦИИ PDF =================
+def generate_pdf(cart, total_sum, name, phone):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=14)
+    
+    # Заголовок
+    pdf.cell(200, 10, txt="Смета на электромонтажные работы", ln=True, align='C')
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(200, 10, txt=f"Клиент: {name} | Тел: {phone}", ln=True, align='C')
+    pdf.ln(10)
+    
+    # Таблица
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(100, 10, "Наименование", border=1)
+    pdf.cell(30, 10, "Кол-во", border=1, align='C')
+    pdf.cell(30, 10, "Цена", border=1, align='C')
+    pdf.cell(30, 10, "Сумма", border=1, align='C', ln=True)
+    
+    for item in cart:
+        pdf.cell(100, 10, item['name'][:40], border=1)
+        pdf.cell(30, 10, f"{item['qty']} {item['unit']}", border=1, align='C')
+        pdf.cell(30, 10, f"{item['price']} BYN", border=1, align='C')
+        pdf.cell(30, 10, f"{item['total']} BYN", border=1, align='C', ln=True)
+        
+    pdf.ln(5)
+    pdf.set_font("Helvetica", size=12, style='B')
+    pdf.cell(200, 10, txt=f"ИТОГО (без материалов): {total_sum} BYN", ln=True, align='R')
+    
+    filename = f"Смета_{name.replace(' ', '_')}.pdf"
+    pdf.output(filename)
+    return filename
+
+# ================= ОСНОВНАЯ ЛОГИКА =================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_carts[user_id] = []
+    context.user_data.clear()
+    
     keyboard = [[InlineKeyboardButton('Перейти в меню', callback_data='menu_main')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
     await update.message.reply_text(
         "👋 Привет! Я бот-калькулятор RemStroy.\n\n"
         "Выберите категорию, затем позицию и укажите количество.",
@@ -115,25 +159,41 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except:
         pass
 
+async def show_electric_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    keyboard = []
+    for cat_id, cat_data in PRICE_LIST.items():
+        keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
+        
+    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text("⚡ Электрика: выберите категорию работ:", reply_markup=reply_markup)
+
+async def show_plumbing_stub(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    keyboard = [[InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text("🚰 Раздел «Сантехника» пока в разработке.", reply_markup=reply_markup)
+
 async def show_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     cat_id = query.data.replace('cat_', '')
     category = PRICE_LIST.get(cat_id)
     if not category:
-        await query.answer("Категория не найдена", show_alert=True)
         return
     keyboard = []
     for item_id, item_data in category['items'].items():
         btn_text = f"{item_data['name']} — {item_data['price']} BYN"
         callback = f'item_{cat_id}_{item_id}'
         keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
-    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
+    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_electric')])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text(
-        f"Категория: {category['name']}\nВыберите позицию:",
-        reply_markup=reply_markup
-    )
+    await query.edit_message_text(f"Категория: {category['name']}\nВыберите позицию:", reply_markup=reply_markup)
 
 async def select_item(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -166,6 +226,7 @@ async def handle_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     item_id = item_info['item_id']
     item = PRICE_LIST[cat_id]['items'][item_id]
     total_item_price = qty * item['price']
+    
     if user_id not in user_carts:
         user_carts[user_id] = []
     user_carts[user_id].append({
@@ -176,8 +237,9 @@ async def handle_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'unit': item['unit']
     })
     del context.user_data['waiting_qty']
+    
     keyboard = [
-        [InlineKeyboardButton('➕ Добавить ещё', callback_data='menu_main')],
+        [InlineKeyboardButton('➕ Добавить ещё', callback_data='menu_electric')],
         [InlineKeyboardButton('🧾 Показать итог', callback_data='show_total')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -201,7 +263,9 @@ async def show_total(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text += f"• {item['name']}: {item['qty']} {item['unit']} × {item['price']} = {item['total']} BYN\n"
         total_sum += item['total']
     text += f"\n💰 ИТОГО: {total_sum} BYN (без учета материалов)\n\n"
+    
     keyboard = [
+        [InlineKeyboardButton('📝 Оформить заявку', callback_data='checkout')],
         [InlineKeyboardButton('🔄 Сбросить', callback_data='reset_cart')],
         [InlineKeyboardButton('⬅️ В меню', callback_data='menu_main')]
     ]
@@ -215,31 +279,72 @@ async def reset_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer("Корзина сброшена!")
     await show_main_menu(update, context)
 
-async def show_electric_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# ================= ЛОГИКА ЗАЯВКИ (ConversationHandler) =================
+async def start_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    user_id = query.from_user.id
     
-    keyboard = []
-    for cat_id, cat_data in PRICE_LIST.items():
-        keyboard.append([InlineKeyboardButton(cat_data['name'], callback_data=f'cat_{cat_id}')])
+    if not user_carts.get(user_id):
+        await query.edit_message_text("Ваша корзина пуста. Добавьте услуги перед оформлением.")
+        return ConversationHandler.END
         
-    keyboard.append([InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')])
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    await query.edit_message_text("⚡ Электрика: выберите категорию работ:", reply_markup=reply_markup)
+    await query.edit_message_text("📝 Давайте оформим заявку.\n\nВведите ваше **Имя**:", parse_mode='Markdown')
+    return ASK_NAME
 
-async def show_plumbing_stub(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
-    keyboard = [[InlineKeyboardButton('⬅️ Назад', callback_data='menu_main')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    await query.edit_message_text(
-        "🚰 Раздел «Сантехника» пока в разработке.\nСкоро здесь появятся услуги по монтажу труб, установке смесителей и т.д.",
-        reply_markup=reply_markup
-    )
+async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['client_name'] = update.message.text
+    await update.message.reply_text("Отлично! Теперь введите ваш **номер телефона**:")
+    return ASK_PHONE
 
+async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    phone = update.message.text
+    name = context.user_data.get('client_name', 'Не указано')
+    user_id = update.effective_user.id
+    cart = user_carts.get(user_id, [])
+    total_sum = sum(item['total'] for item in cart)
+    
+    # 1. Генерируем PDF
+    try:
+        pdf_filename = generate_pdf(cart, total_sum, name, phone)
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка при создании PDF: {e}")
+        return ConversationHandler.END
+
+    # 2. Формируем текст заявки для вас
+    admin_text = f"🔔 НОВАЯ ЗАЯВКА С БОТА\n\n👤 Имя: {name}\n📞 Телефон: {phone}\n\n"
+    for item in cart:
+        admin_text += f"• {item['name']}: {item['qty']} {item['unit']} = {item['total']} BYN\n"
+    admin_text += f"\n💰 ИТОГО: {total_sum} BYN"
+    
+    try:
+        # Отправляем вам текст
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_text)
+        # Отправляем вам PDF
+        with open(pdf_filename, 'rb') as pdf_file:
+            await context.bot.send_document(chat_id=ADMIN_CHAT_ID, document=pdf_file)
+            
+        # Отправляем клиенту PDF
+        with open(pdf_filename, 'rb') as pdf_file:
+            await update.message.reply_document(document=pdf_file, caption="Ваша смета готова! Мы свяжемся с вами в ближайшее время для уточнения деталей.")
+            
+    except Exception as e:
+        await update.message.reply_text(f"Заявка принята, но не удалось отправить файл. Ошибка: {e}")
+        
+    finally:
+        if os.path.exists(pdf_filename):
+            os.remove(pdf_filename)
+    
+    # Очищаем корзину
+    user_carts[user_id] = []
+    
+    keyboard = [[InlineKeyboardButton('В главное меню', callback_data='menu_main')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("✅ Спасибо! Ваша заявка принята и смета отправлена.", reply_markup=reply_markup)
+    
+    return ConversationHandler.END
+
+# ================= ЗАПУСК =================
 def main():
     class HealthCheckHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -256,14 +361,28 @@ def main():
     threading.Thread(target=run_health_server, daemon=True).start()
     
     application = ApplicationBuilder().token(BOT_TOKEN).build()
+    
+    # Обработчик заявки
+    conv_handler = ConversationHandler(
+        entry_points=[CallbackQueryHandler(start_checkout, pattern='^checkout$')],
+        states={
+            ASK_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+            ASK_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
+        },
+        fallbacks=[]
+    )
+    
     application.add_handler(CommandHandler('start', start))
+    application.add_handler(conv_handler)
+    application.add_handler(CallbackQueryHandler(show_main_menu, pattern='^menu_main$'))
     application.add_handler(CallbackQueryHandler(show_electric_menu, pattern='^menu_electric$'))
     application.add_handler(CallbackQueryHandler(show_plumbing_stub, pattern='^menu_plumbing$'))
-    application.add_handler(CallbackQueryHandler(show_main_menu, pattern='^menu_main$'))
     application.add_handler(CallbackQueryHandler(show_category, pattern='^cat_'))
     application.add_handler(CallbackQueryHandler(select_item, pattern='^item_'))
     application.add_handler(CallbackQueryHandler(show_total, pattern='^show_total$'))
     application.add_handler(CallbackQueryHandler(reset_cart, pattern='^reset_cart$'))
+    
+    # Обработка ввода количества (идет после select_item)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_quantity))
     
     print("Бот запущен...")
