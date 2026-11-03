@@ -11,7 +11,7 @@ from telegram.ext import (
 )
 
 # ================= НАСТРОЙКИ =================
-BOT_TOKEN = '8707599180:AAFjeddyCdiE8T1uA4CQe9QrWw3Vm7pGrEk'
+BOT_TOKEN = '8707599180:AAFk8Q0OVbTiybTemzuci-MR4Jjh6cFam98'
 # ID чата, КУДА ПРИХОДИТЬ ЗАЯВКАМ (ваш ID)
 ADMIN_CHAT_ID = '7310945290' 
 
